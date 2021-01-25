@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 
 namespace LiteDB
@@ -9,12 +10,12 @@ namespace LiteDB
         /// <summary>
         /// Collection to store clean only pages in cache
         /// </summary>
-        private Dictionary<uint, BasePage> _clean = new Dictionary<uint, BasePage>();
+        private ConcurrentDictionary<uint, BasePage> _clean = new ConcurrentDictionary<uint, BasePage>();
 
         /// <summary>
         /// Collection to store dirty only pages in cache. If page was in _clean, remove from there and insert here
         /// </summary>
-        private Dictionary<uint, BasePage> _dirty = new Dictionary<uint, BasePage>();
+        private ConcurrentDictionary<uint, BasePage> _dirty = new ConcurrentDictionary<uint, BasePage>();
 
         private IDiskService _disk;
         private Logger _log;
@@ -58,7 +59,7 @@ namespace LiteDB
         /// </summary>
         public void SetDirty(BasePage page)
         {
-            _clean.Remove(page.PageID);
+            _clean.TryRemove(page.PageID, out BasePage p);
             page.IsDirty = true;
             _dirty[page.PageID] = page;
         }
